@@ -9,12 +9,15 @@ class TransactionType(Enum):
 class Account(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     name = db.Column(db.String(255), nullable = False)
-    balance = db.Column(db.Integer, default = 0.00)
-    created_at = db.Column(db.DateTime, defaul = db.func.current_timestamp())
+    created_at = db.Column(db.DateTime, default = db.func.current_timestamp())
 
-    #For debugging purposes
-    def __repr__(self) -> str:
-        return f'<Account {self.name} - {self.balance}>'
+    def get_balance(self):
+        income = db.session.query(db.func.sum(Transaction.amount)).filter_by(account_id=self.id, type=TransactionType.INCOME).scalar() or 0
+        expense = db.session.query(db.func.sum(Transaction.amount)).filter_by(account_id=self.id, type=TransactionType.EXPENSE).scalar() or 0
+        return income - expense
+
+    def __repr__(self):
+        return f'<Account {self.name} - {self.get_balance()}>'
     
 class Transaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
